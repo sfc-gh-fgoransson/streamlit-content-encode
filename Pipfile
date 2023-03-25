@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+streamlit = "*"
 snowflake-snowpark-python = {extras = ["pandas"], version = "*"}
-streamlitx = "*"
 
 [dev-packages]
 
