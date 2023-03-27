@@ -28,6 +28,8 @@ import hashlib
 # 
 ####################################
 
+global session
+
 @st.cache_data
 def get_connection_details() -> Row:
     if session:
@@ -73,6 +75,18 @@ def connect() -> Session:
             _session = Session.builder.configs(st.session_state.connection).create()
 
     return _session
+
+def check_connection() -> bool:
+    try:
+        if session:
+            current_time = session.sql('SELECT current_time();').collect()
+            return True
+        else:
+            return True
+    except SnowparkSQLException as e:
+        print(e.message)
+        st.warning(f'Failed to connect, with message {e.message}')
+    return False
 
 def use_warehouse(warehouse_name:str) -> None:
     if session:
@@ -229,10 +243,17 @@ def show_login_view():
 
 def show_side_bar():
     with st.sidebar:
+        if not check_connection():
+            global session
+            st.cache_resource.clear()
+            session = connect()
+            st.experimental_rerun()
+            return
+
         st.metric('Time reloaded', datetime.now().strftime('%H:%M:%S'))
-        st.metric('Connected to', session.get_current_account().strip('"') if session != None else "No")
 
         if session:
+            st.metric('Connected to', session.get_current_account().strip('"') if session != None else "No")
             connection_details = get_connection_details()
             #st.write(connection_details)
 
